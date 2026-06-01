@@ -1,276 +1,294 @@
 # =============================================================================
-# ORBITWATCH - Gerador de Relatório em Tempo Real
+# ORBITWATCH - Plataforma de Monitoramento Ambiental via Dados Orbitais NASA
 # Global Solution 2025 - FIAP | Engenharia de Software - 1º Semestre
 # Disciplina: Computational Thinking Using Python
 # =============================================================================
 
+# -----------------------------------------------------------------------------
+# 1. DEFINIÇÃO DO PROBLEMA
+# -----------------------------------------------------------------------------
+# Eventos ambientais críticos como queimadas, desmatamento e anomalias
+# climáticas muitas vezes são detectados tarde demais, agravando seus impactos.
+# A falta de acesso a dados de monitoramento contínuo e em tempo real dificulta
+# a resposta rápida de autoridades, pesquisadores e cidadãos.
+#
+# SOLUÇÃO: O OrbitWatch utiliza dados orbitais de satélites da NASA para
+# monitorar em tempo real esses eventos, transformando dados espaciais brutos
+# em informação acessível. A solução conecta a infraestrutura espacial já
+# existente (satélites FIRMS, EONET, APOD) a um problema ambiental urgente
+# na Terra — e não existiria sem essa infraestrutura orbital.
+# -----------------------------------------------------------------------------
+
 import requests
-import webbrowser
-import os
-from datetime import datetime
 
 API_KEY = "z9qtFmVtl57soBw9Bsx1sKyfzAgKKlqfxtGvmFqS"
 
 # -----------------------------------------------------------------------------
-# FUNÇÕES
+# 2. LISTAS DE DADOS DO PROJETO (4 listas com 20 itens cada)
 # -----------------------------------------------------------------------------
 
-def buscar_apod():
-    """Busca a imagem astronômica do dia via API APOD da NASA."""
-    try:
-        url = f"https://api.nasa.gov/planetary/apod?api_key={API_KEY}"
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            print("✓ APOD carregado.")
-            return response.json()
+satelites_sensores = [
+    "TERRA - satélite NASA lançado em 1999",
+    "AQUA - satélite NASA lançado em 2002",
+    "SUOMI NPP - monitoramento climático",
+    "NOAA-20 - dados atmosféricos",
+    "Landsat 8 - imagens de superfície terrestre",
+    "Landsat 9 - resolução melhorada",
+    "GOES-16 - monitoramento meteorológico",
+    "GOES-18 - cobertura do Pacífico",
+    "Sentinel-2 - vegetação e solo",
+    "Sentinel-5P - qualidade do ar",
+    "MODIS - detecção de queimadas (FIRMS)",
+    "VIIRS - imagens noturnas e térmicas",
+    "ICESat-2 - altimetria polar",
+    "GRACE-FO - gravidade e água subterrânea",
+    "OCO-2 - concentração de CO₂",
+    "CALIPSO - aerossóis e nuvens",
+    "CloudSat - estrutura de nuvens",
+    "SMAP - umidade do solo",
+    "GPM - precipitação global",
+    "TRMM - chuvas tropicais"
+]
+
+eventos_ambientais = [
+    "Queimadas e incêndios florestais",
+    "Desmatamento em tempo real",
+    "Furacões e ciclones tropicais",
+    "Terremotos e atividade sísmica",
+    "Erupções vulcânicas",
+    "Inundações e enchentes",
+    "Secas prolongadas",
+    "Derretimento de geleiras",
+    "Elevação do nível do mar",
+    "Tempestades de areia e poeira",
+    "Deslizamentos de terra",
+    "Florações de algas (bloom)",
+    "Erosão costeira",
+    "Anomalias de temperatura superficial",
+    "Buracos de ozônio",
+    "Poluição atmosférica urbana",
+    "Vazamentos de óleo no oceano",
+    "Ondas de calor extremas",
+    "Neve e cobertura de gelo",
+    "Fumaça e aerossóis atmosféricos"
+]
+
+apis_nasa = [
+    "APOD - Astronomy Picture of the Day",
+    "FIRMS - Fire Information for Resource Management",
+    "EONET - Earth Observatory Natural Event Tracker",
+    "NASA Earthdata - repositório de dados ambientais",
+    "GIBS - Global Imagery Browse Services",
+    "CMR - Common Metadata Repository",
+    "NASA POWER - dados meteorológicos e solares",
+    "Exoplanet Archive API",
+    "NASA Image and Video Library",
+    "Open APIs - dados abertos da NASA",
+    "DONKI - notificações de clima espacial",
+    "MarsWeather - clima em Marte",
+    "NeoWs - objetos próximos da Terra",
+    "Insight Mars Lander API",
+    "NASA Techport - projetos tecnológicos",
+    "GeneLab - biologia no espaço",
+    "HelioViewer API - imagens solares",
+    "LAADS DAAC - dados atmosféricos",
+    "LP DAAC - dados de superfície terrestre",
+    "PO.DAAC - dados de oceanografia"
+]
+
+impactos_solucao = [
+    "Detecção precoce de queimadas no Brasil",
+    "Redução do tempo de resposta a desastres naturais",
+    "Apoio à fiscalização ambiental com dados reais",
+    "Democratização do acesso a dados satelitais",
+    "Suporte a pesquisadores e universidades",
+    "Monitoramento do desmatamento na Amazônia",
+    "Alertas automáticos para defesa civil",
+    "Visualização acessível de dados complexos",
+    "Integração com sistemas de gestão municipal",
+    "Apoio a políticas públicas ambientais",
+    "Redução de custos de monitoramento tradicional",
+    "Cobertura nacional sem infraestrutura física",
+    "Histórico de eventos para análise científica",
+    "Transparência de dados ambientais ao cidadão",
+    "Complemento a sensores locais (edge computing)",
+    "Alerta de fumaça e qualidade do ar",
+    "Monitoramento de bacias hidrográficas",
+    "Suporte à agricultura de precisão",
+    "Identificação de áreas de risco",
+    "Contribuição para metas do Acordo de Paris"
+]
+
+# -----------------------------------------------------------------------------
+# 3. FUNÇÕES AUXILIARES
+# -----------------------------------------------------------------------------
+
+def aguardar_retorno():
+    """Pausa e pergunta se o usuário quer voltar ao menu ou sair."""
+    print("\n" + "-"*55)
+    print("  V. Voltar ao menu principal")
+    print("  0. Sair")
+    print("-"*55)
+    while True:
+        acao = input("  Escolha: ").strip().upper()
+        if acao == "V":
+            return True   # voltar ao menu
+        elif acao == "0":
+            return False  # sair
         else:
-            print(f"✗ Erro APOD: {response.status_code}")
-            return None
-    except Exception as e:
-        print(f"✗ Erro APOD: {e}")
-        return None
+            print("  ✗ Digite V para voltar ou 0 para sair.")
 
 
-def buscar_eventos_eonet(limite=20):
-    """Busca eventos naturais ativos agora via API EONET da NASA (sem chave)."""
-    try:
-        url = f"https://eonet.gsfc.nasa.gov/api/v3/events?status=open&limit={limite}"
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            eventos = response.json().get("events", [])
-            print(f"✓ {len(eventos)} evento(s) EONET carregado(s).")
-            return eventos
-        else:
-            print(f"✗ Erro EONET: {response.status_code}")
-            return []
-    except Exception as e:
-        print(f"✗ Erro EONET: {e}")
-        return []
+def exibir_lista(nome_lista, itens):
+    """Exibe os itens de uma lista numerada."""
+    print(f"\n{'='*55}")
+    print(f"  {nome_lista} ({len(itens)} itens)")
+    print(f"{'='*55}")
+    for i, item in enumerate(itens, start=1):
+        print(f"  {i:02d}. {item}")
 
 
-def classificar_evento(titulo):
-    """Classifica um evento por categoria usando match/case."""
-    t = titulo.lower()
+def classificar_evento(evento):
+    """Classifica um evento ambiental por categoria usando match/case."""
+    t = evento.lower()
     match True:
-        case _ if any(p in t for p in ["fire", "wildfire", "queimada", "fumaça"]):
-            return "🔥 Queimada"
-        case _ if any(p in t for p in ["storm", "hurricane", "cyclone", "typhoon"]):
+        case _ if any(p in t for p in ["queimada", "incêndio", "fumaça", "wildfire", "fire"]):
+            return "🔥 Fogo / Queimada"
+        case _ if any(p in t for p in ["furacão", "ciclone", "tempestade", "storm", "hurricane", "typhoon"]):
             return "🌀 Tempestade"
-        case _ if any(p in t for p in ["flood", "inundação"]):
+        case _ if any(p in t for p in ["inundação", "enchente", "flood"]):
             return "🌊 Inundação"
-        case _ if any(p in t for p in ["volcano", "eruption", "vulcão"]):
-            return "🌋 Vulcão"
-        case _ if any(p in t for p in ["iceberg", "ice", "snow", "gelo"]):
+        case _ if any(p in t for p in ["vulcão", "erupção", "volcano", "eruption"]):
+            return "🌋 Vulcânico"
+        case _ if any(p in t for p in ["desmatamento", "erosão", "alga"]):
+            return "🌿 Vegetação / Solo"
+        case _ if any(p in t for p in ["gelo", "neve", "geleira", "ice", "iceberg", "snow"]):
             return "🧊 Criosfera"
-        case _ if any(p in t for p in ["drought", "seca"]):
+        case _ if any(p in t for p in ["seca", "drought"]):
             return "☀️ Seca"
         case _ if any(p in t for p in ["earthquake", "seismic"]):
             return "🌐 Sísmico"
         case _:
-            return "🌍 Outros"
+            return "🌍 Atmosférico / Outros"
 
 
-def gerar_html(dados_apod, eventos_eonet):
-    """Monta e abre o relatório HTML com dados em tempo real da NASA."""
+# -----------------------------------------------------------------------------
+# 4. FUNÇÕES DE CADA OPÇÃO DO MENU
+# -----------------------------------------------------------------------------
 
-    # --- APOD ---
-    if dados_apod:
-        titulo_apod = dados_apod.get("title", "N/A")
-        data_apod   = dados_apod.get("date", "N/A")
-        explicacao  = dados_apod.get("explanation", "")
-        media_url   = dados_apod.get("url", "")
-        media_type  = dados_apod.get("media_type", "image")
+def tela_eventos_eonet():
+    """Busca e exibe eventos naturais ativos via NASA EONET."""
+    try:
+        url = "https://eonet.gsfc.nasa.gov/api/v3/events?status=open&limit=15"
+        response = requests.get(url, timeout=10)
 
-        if media_type == "video":
-            midia_html = f'<iframe src="{media_url}" width="100%" height="460" frameborder="0" allowfullscreen></iframe>'
+        if response.status_code == 200:
+            eventos = response.json().get("events", [])
+            if not eventos:
+                print("\n⚠ Nenhum evento ativo no momento.")
+            else:
+                print(f"\n✓ {len(eventos)} evento(s) ATIVO(S) agora — Fonte: NASA EONET\n")
+                print(f"{'#':<4} {'Evento':<40} {'Categoria':<22} {'Data'}")
+                print("-" * 85)
+                for i, evento in enumerate(eventos, start=1):
+                    titulo    = evento.get("title", "Sem título")[:38]
+                    categoria = evento["categories"][0]["title"] if evento.get("categories") else "N/A"
+                    geo       = evento.get("geometry", [])
+                    data      = geo[-1]["date"][:10] if geo else "N/A"
+                    print(f"{i:<4} {titulo:<40} {categoria:<22} {data}")
+
+        elif response.status_code == 503:
+            print("\n⚠ EONET temporariamente indisponível (503). Tente novamente em instantes.")
         else:
-            midia_html = f'<img src="{media_url}" alt="{titulo_apod}">'
+            print(f"\n✗ Erro EONET: status {response.status_code}")
 
-        secao_apod = f"""
-        <section class="card">
-            <h2>📸 Imagem Astronômica do Dia</h2>
-            <h3>{titulo_apod}</h3>
-            <span class="sub">{data_apod}</span>
-            {midia_html}
-            <p>{explicacao}</p>
-        </section>"""
-    else:
-        secao_apod = "<section class='card'><h2>📸 APOD</h2><p>Não foi possível carregar os dados.</p></section>"
+    except requests.exceptions.ConnectionError:
+        print("\n✗ Sem conexão com a internet.")
+    except requests.exceptions.Timeout:
+        print("\n✗ Tempo de resposta esgotado.")
+    except Exception as e:
+        print(f"\n✗ Erro inesperado: {e}")
 
-    # --- EONET ---
-    if eventos_eonet:
-        linhas = ""
-        for ev in eventos_eonet:
-            nome      = ev.get("title", "N/A")
-            categoria = ev["categories"][0]["title"] if ev.get("categories") else "N/A"
-            geo       = ev.get("geometry", [])
-            data_ev   = geo[-1]["date"][:10] if geo else "N/A"
-            coords    = geo[-1].get("coordinates", None) if geo else None
-            coord_str = f"{coords[1]:.2f}, {coords[0]:.2f}" if coords and isinstance(coords[0], float) else "N/A"
-            tipo      = classificar_evento(nome)
-            maps_url  = f"https://www.google.com/maps?q={coords[1]},{coords[0]}" if coords and isinstance(coords[0], float) else "#"
 
-            linhas += f"""
-            <tr>
-                <td>{tipo}</td>
-                <td><a href="{maps_url}" target="_blank">{nome}</a></td>
-                <td>{categoria}</td>
-                <td>{data_ev}</td>
-                <td>{coord_str}</td>
-            </tr>"""
+def tela_satelites():
+    """Exibe a lista de satélites e sensores com classificação."""
+    exibir_lista("Satélites e Sensores NASA", satelites_sensores)
 
-        secao_eonet = f"""
-        <section class="card">
-            <h2>🌍 Eventos Naturais Ativos Agora — NASA EONET</h2>
-            <p class="sub">Dados em tempo real · {len(eventos_eonet)} evento(s) aberto(s) · Fonte: NASA Earth Observatory</p>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Tipo</th>
-                        <th>Evento</th>
-                        <th>Categoria</th>
-                        <th>Data</th>
-                        <th>Coordenadas</th>
-                    </tr>
-                </thead>
-                <tbody>{linhas}</tbody>
-            </table>
-        </section>"""
-    else:
-        secao_eonet = "<section class='card'><h2>🌍 EONET</h2><p>Nenhum evento ativo encontrado.</p></section>"
 
-    # --- HTML FINAL ---
-    agora = datetime.now().strftime("%d/%m/%Y às %H:%M")
+def tela_eventos_ambientais():
+    """Exibe a lista de eventos ambientais com classificação automática."""
+    exibir_lista("Eventos Ambientais Monitorados", eventos_ambientais)
+    print("\n  --- Classificação automática ---")
+    for evento in eventos_ambientais:
+        print(f"  • {evento:<40} → {classificar_evento(evento)}")
 
-    html = f"""<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OrbitWatch — Relatório em Tempo Real</title>
-    <style>
-        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-        body {{
-            background: #060d1a;
-            color: #d0dff0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            padding: 40px 20px;
-        }}
-        header {{
-            text-align: center;
-            margin-bottom: 40px;
-        }}
-        header h1 {{
-            font-size: 2.2rem;
-            color: #4fc3f7;
-            letter-spacing: 2px;
-        }}
-        header p {{
-            color: #607d9e;
-            margin-top: 6px;
-            font-size: 0.9rem;
-        }}
-        .badge {{
-            display: inline-block;
-            background: #0d2137;
-            color: #4fc3f7;
-            border: 1px solid #1e4a70;
-            padding: 3px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            margin: 4px 3px;
-        }}
-        .card {{
-            background: #0b1628;
-            border: 1px solid #1a2e47;
-            border-radius: 12px;
-            padding: 28px;
-            margin-bottom: 28px;
-            max-width: 960px;
-            margin-left: auto;
-            margin-right: auto;
-        }}
-        h2 {{
-            color: #81d4fa;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #1a2e47;
-        }}
-        h3 {{ color: #cce8ff; margin: 12px 0 4px; }}
-        .sub {{ color: #607d9e; font-size: 0.85rem; display: block; margin-bottom: 12px; }}
-        img, iframe {{
-            width: 100%;
-            border-radius: 8px;
-            margin: 16px 0;
-        }}
-        p {{ line-height: 1.75; color: #9ab5cc; margin-top: 8px; }}
-        table {{ width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 0.88rem; }}
-        th {{
-            background: #0d2137;
-            color: #4fc3f7;
-            padding: 10px 12px;
-            text-align: left;
-            border-bottom: 2px solid #1a3a5c;
-        }}
-        td {{
-            padding: 9px 12px;
-            border-bottom: 1px solid #111d2e;
-            color: #b0c8e0;
-        }}
-        tr:hover td {{ background: #0d1e33; }}
-        a {{ color: #4fc3f7; text-decoration: none; }}
-        a:hover {{ text-decoration: underline; }}
-        footer {{
-            text-align: center;
-            color: #2a4060;
-            font-size: 0.8rem;
-            margin-top: 50px;
-            padding-top: 20px;
-            border-top: 1px solid #0d1e33;
-        }}
-    </style>
-</head>
-<body>
-    <header>
-        <h1>🛰 OrbitWatch</h1>
-        <p>Monitoramento Ambiental via Dados Orbitais NASA</p>
-        <div style="margin-top:12px">
-            <span class="badge">NASA DATA</span>
-            <span class="badge">TEMPO REAL</span>
-            <span class="badge">GLOBAL SOLUTION 2025</span>
-            <span class="badge">FIAP</span>
-        </div>
-        <p style="margin-top:14px">Relatório gerado em {agora}</p>
-    </header>
 
-    {secao_eonet}
-    {secao_apod}
+def tela_apis():
+    """Exibe a lista de APIs NASA utilizadas."""
+    exibir_lista("APIs NASA Utilizadas", apis_nasa)
 
-    <footer>
-        OrbitWatch &copy; {datetime.now().year} — Global Solution FIAP &nbsp;|&nbsp;
-        Dados: <a href="https://api.nasa.gov">NASA Open APIs</a> &amp;
-        <a href="https://eonet.gsfc.nasa.gov">NASA EONET</a>
-    </footer>
-</body>
-</html>"""
 
-    caminho = os.path.join(os.path.dirname(os.path.abspath(__file__)), "orbitwatch_relatorio.html")
-    with open(caminho, "w", encoding="utf-8") as f:
-        f.write(html)
-
-    print(f"✓ Relatório gerado: {caminho}")
-    webbrowser.open(f"file:///{caminho}")
+def tela_impactos():
+    """Exibe a lista de impactos esperados da solução."""
+    exibir_lista("Impactos da Solução OrbitWatch", impactos_solucao)
 
 
 # -----------------------------------------------------------------------------
-# EXECUÇÃO DIRETA
+# 5. MENU PRINCIPAL E LOOP
 # -----------------------------------------------------------------------------
+
+def exibir_menu():
+    """Exibe o menu principal."""
+    print("\n" + "="*55)
+    print("        ORBITWATCH - Monitoramento Orbital")
+    print("="*55)
+    print("  1. Eventos naturais ativos agora (EONET)")
+    print("  2. Satélites e sensores")
+    print("  3. Eventos ambientais monitorados")
+    print("  4. APIs NASA utilizadas")
+    print("  5. Impactos da solução")
+    print("  0. Sair")
+    print("="*55)
+
+
+def main():
+    """Função principal do OrbitWatch."""
+    print("\n🛰  Bem-vindo ao OrbitWatch — Monitoramento Ambiental via Satélite NASA")
+
+    rodando = True
+    while rodando:
+        exibir_menu()
+
+        try:
+            opcao = int(input("\n  Escolha uma opção: "))
+        except ValueError:
+            print("  ✗ Digite apenas números.")
+            continue
+
+        match opcao:
+            case 1:
+                tela_eventos_eonet()
+                rodando = aguardar_retorno()
+            case 2:
+                tela_satelites()
+                rodando = aguardar_retorno()
+            case 3:
+                tela_eventos_ambientais()
+                rodando = aguardar_retorno()
+            case 4:
+                tela_apis()
+                rodando = aguardar_retorno()
+            case 5:
+                tela_impactos()
+                rodando = aguardar_retorno()
+            case 0:
+                rodando = False
+            case _:
+                print("\n  ✗ Opção inválida. Tente novamente.")
+
+    print("\n  Encerrando OrbitWatch. Até logo!\n")
+
 
 if __name__ == "__main__":
-    print("\n🛰 OrbitWatch — Gerando relatório em tempo real...\n")
-    dados_apod    = buscar_apod()
-    eventos_eonet = buscar_eventos_eonet(limite=20)
-    gerar_html(dados_apod, eventos_eonet)
-    print("\n✓ Pronto! O relatório foi aberto no navegador.")
+    main()
     
