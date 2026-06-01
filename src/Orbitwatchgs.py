@@ -179,7 +179,7 @@ def classificar_evento(evento):
 def tela_eventos_eonet():
     """Busca e exibe eventos naturais ativos via NASA EONET."""
     try:
-        url = "https://eonet.gsfc.nasa.gov/api/v3/events?status=open&limit=15"
+        url = "https://eonet.gsfc.nasa.gov/api/v3/events?status=open&limit=100"
         response = requests.get(url, timeout=10)
 
         if response.status_code == 200:
