@@ -1,6 +1,6 @@
 # =============================================================================
 # ORBITWATCH - Plataforma de Monitoramento Ambiental via Dados Orbitais NASA
-# Global Solution 2025 - FIAP | Engenharia de Software - 1º Semestre
+# Global Solution 2026 - FIAP | Engenharia de Software - 1º Semestre
 # Disciplina: Computational Thinking Using Python
 # =============================================================================
 
