@@ -153,23 +153,23 @@ def classificar_evento(evento):
     t = evento.lower()
     match True:
         case _ if any(p in t for p in ["queimada", "incêndio", "fumaça", "wildfire", "fire"]):
-            return "🔥 Fogo / Queimada"
+            return "Fogo / Queimada"
         case _ if any(p in t for p in ["furacão", "ciclone", "tempestade", "storm", "hurricane", "typhoon"]):
-            return "🌀 Tempestade"
+            return "Tempestade"
         case _ if any(p in t for p in ["inundação", "enchente", "flood"]):
-            return "🌊 Inundação"
+            return "Inundação"
         case _ if any(p in t for p in ["vulcão", "erupção", "volcano", "eruption"]):
-            return "🌋 Vulcânico"
+            return "Vulcânico"
         case _ if any(p in t for p in ["desmatamento", "erosão", "alga"]):
-            return "🌿 Vegetação / Solo"
+            return "Vegetação / Solo"
         case _ if any(p in t for p in ["gelo", "neve", "geleira", "ice", "iceberg", "snow"]):
-            return "🧊 Criosfera"
+            return "Criosfera"
         case _ if any(p in t for p in ["seca", "drought"]):
-            return "☀️ Seca"
+            return "Seca"
         case _ if any(p in t for p in ["earthquake", "seismic"]):
-            return "🌐 Sísmico"
+            return "Sísmico"
         case _:
-            return "🌍 Atmosférico / Outros"
+            return "Atmosférico / Outros"
 
 
 # -----------------------------------------------------------------------------
