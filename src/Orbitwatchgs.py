@@ -1,31 +1,6 @@
-# ============================================================================
-# ORBITWATCH - Plataforma de Monitoramento Ambiental via Dados Orbitais NASA
-# Global Solution 2026 - FIAP | Engenharia de Software - 1º Semestre
-# Disciplina: Computational Thinking Using Python
-# ============================================================================
-
-# -----------------------------------------------------------------------------
-# 1. DEFINIÇÃO DO PROBLEMA
-# -----------------------------------------------------------------------------
-# Eventos ambientais críticos como queimadas, desmatamento e anomalias
-# climáticas muitas vezes são detectados tarde demais, agravando seus impactos.
-# A falta de acesso a dados de monitoramento contínuo e em tempo real dificulta
-# a resposta rápida de autoridades, pesquisadores e cidadãos.
-#
-# SOLUÇÃO: O OrbitWatch utiliza dados orbitais de satélites da NASA para
-# monitorar em tempo real esses eventos, transformando dados espaciais brutos
-# em informação acessível. A solução conecta a infraestrutura espacial já
-# existente (satélites FIRMS, EONET, APOD) a um problema ambiental urgente
-# na Terra — e não existiria sem essa infraestrutura orbital.
-# -----------------------------------------------------------------------------
-
 import requests
 
 API_KEY = "z9qtFmVtl57soBw9Bsx1sKyfzAgKKlqfxtGvmFqS"
-
-# -----------------------------------------------------------------------------
-# 2. LISTAS DE DADOS DO PROJETO (4 listas com 20 itens cada)
-# -----------------------------------------------------------------------------
 
 satelites_sensores = [
     "TERRA - satélite NASA lançado em 1999",
@@ -119,10 +94,6 @@ impactos_solucao = [
     "Contribuição para metas do Acordo de Paris"
 ]
 
-# -----------------------------------------------------------------------------
-# 3. FUNÇÕES AUXILIARES
-# -----------------------------------------------------------------------------
-
 def aguardar_retorno():
     """Pausa e pergunta se o usuário quer voltar ao menu ou sair."""
     print("\n" + "-"*55)
@@ -170,11 +141,6 @@ def classificar_evento(evento):
             return "🌐 Sísmico"
         case _:
             return "🌍 Atmosférico / Outros"
-
-
-# -----------------------------------------------------------------------------
-# 4. FUNÇÕES DE CADA OPÇÃO DO MENU
-# -----------------------------------------------------------------------------
 
 def tela_eventos_eonet():
     """Busca e exibe eventos naturais ativos via NASA EONET."""
@@ -231,11 +197,6 @@ def tela_apis():
 def tela_impactos():
     """Exibe a lista de impactos esperados da solução."""
     exibir_lista("Impactos da Solução OrbitWatch", impactos_solucao)
-
-
-# -----------------------------------------------------------------------------
-# 5. MENU PRINCIPAL E LOOP
-# -----------------------------------------------------------------------------
 
 def exibir_menu():
     """Exibe o menu principal."""
