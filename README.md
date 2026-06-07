@@ -1,17 +1,17 @@
-# 🛰 OrbitWatch — Monitoramento Ambiental via Dados Orbitais NASA
+# OrbitWatch — Monitoramento Ambiental via Dados Orbitais NASA
 
 > Global Solution 2026 — FIAP | Engenharia de Software — 1º Semestre  
 > Disciplina: Computational Thinking with Python
 
 ---
 
-## 📌 Definição do Problema
+## Definição do Problema
 
 Eventos ambientais críticos como queimadas, desmatamento e anomalias climáticas muitas vezes são detectados tarde demais, agravando seus impactos sociais e ambientais. A falta de acesso a dados de monitoramento contínuo e em tempo real dificulta a resposta rápida de autoridades, pesquisadores e cidadãos.
 
 ---
 
-## 💡 Solução Proposta
+## Solução Proposta
 
 O **OrbitWatch** é uma plataforma de monitoramento ambiental que utiliza dados orbitais de satélites da NASA para detectar e acompanhar em tempo real eventos como queimadas, desmatamento e anomalias climáticas.
 
@@ -19,7 +19,7 @@ A solução transforma dados espaciais brutos em informação acessível, conect
 
 ---
 
-## 🚀 Funcionalidades
+## Funcionalidades
 
 - Eventos naturais ativos em tempo real via **NASA EONET**
 - Classificação automática de eventos por categoria (queimada, tempestade, vulcão etc.)
@@ -28,7 +28,7 @@ A solução transforma dados espaciais brutos em informação acessível, conect
 
 ---
 
-## 🧱 Estruturas de Programação Utilizadas
+## Estruturas de Programação Utilizadas
 
 | Estrutura | Onde é usada |
 |---|---|
@@ -41,7 +41,7 @@ A solução transforma dados espaciais brutos em informação acessível, conect
 
 ---
 
-## 📖 Explicação do Código
+## Explicação do Código
 
 ### `import requests`
 Importa a biblioteca responsável por fazer requisições à internet. É ela que permite ao programa "ligar" para os servidores da NASA e buscar os dados em tempo real.
@@ -66,7 +66,7 @@ Funciona como um seletor inteligente. No menu, direciona o programa para a funç
 
 ---
 
-## 📋 Listas de Dados
+## Listas de Dados
 
 O projeto contém **4 listas com 20 itens cada**:
 
@@ -77,7 +77,7 @@ O projeto contém **4 listas com 20 itens cada**:
 
 ---
 
-## 🗂 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 orbitwatch/
@@ -88,7 +88,7 @@ orbitwatch/
 
 ---
 
-## ▶️ Como Executar
+## Como Executar
 
 **Pré-requisitos:**
 - Python 3.10 ou superior
@@ -108,7 +108,7 @@ Ao iniciar, o menu interativo será exibido. Navegue pelas opções e pressione 
 
 ---
 
-## 🔑 API Key
+## API Key
 
 O projeto utiliza a **NASA Open APIs**. A chave já está configurada no código para fins de demonstração acadêmica.
 
@@ -118,7 +118,7 @@ A API EONET é pública e **não requer chave de acesso**.
 
 ---
 
-## 🌍 Conexão com a Indústria Espacial
+## Conexão com a Indústria Espacial
 
 O OrbitWatch se conecta diretamente à Indústria Espacial ao consumir dados gerados por satélites em órbita. Entre os sistemas utilizados estão:
 
@@ -129,7 +129,7 @@ Sem a infraestrutura orbital, a plataforma não existiria.
 
 ---
 
-## 👥 Integrantes do Grupo
+## Integrantes do Grupo
 
 | Nome |                            | RM     |
 |Felipe Romano de Paula Souza       | 571653 |
@@ -140,6 +140,6 @@ Sem a infraestrutura orbital, a plataforma não existiria.
 
 ---
 
-## 📄 Licença
+## Licença
 
 Projeto acadêmico desenvolvido para a Global Solution 2026 — FIAP. Dados fornecidos pela [NASA Open APIs](https://api.nasa.gov).
