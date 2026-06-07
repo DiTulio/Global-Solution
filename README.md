@@ -1,7 +1,7 @@
 # 🛰 OrbitWatch — Monitoramento Ambiental via Dados Orbitais NASA
 
 > Global Solution 2026 — FIAP | Engenharia de Software — 1º Semestre  
-> Disciplina: Computational Thinking Using Python
+> Disciplina: Computational Thinking with Python
 
 ---
 
