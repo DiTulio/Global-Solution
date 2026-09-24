@@ -1,4 +1,6 @@
 import requests
+import truststore
+truststore.inject_into_ssl()
 
 API_KEY = "z9qtFmVtl57soBw9Bsx1sKyfzAgKKlqfxtGvmFqS"
 
@@ -94,6 +96,101 @@ impactos_solucao = [
     "Contribuição para metas do Acordo de Paris"
 ]
 
+def tela_eventos_brasil():
+    """Busca eventos naturais ativos dentro do território brasileiro."""
+
+    try:
+        url = "https://eonet.gsfc.nasa.gov/api/v3/events"
+
+        params = {
+            "status": "open",
+            "limit": 100,
+            "bbox": "-74,5.3,-34.7,-33.8"
+        }
+
+        print("\nConsultando eventos naturais ativos no Brasil...")
+        print("Fonte: NASA EONET\n")
+
+        response = requests.get(
+            url,
+            params=params,
+            timeout=15
+        )
+
+        response.raise_for_status()
+
+        dados = response.json()
+        eventos = dados.get("events", [])
+
+        if not eventos:
+            print("\n⚠ Nenhum evento natural ativo encontrado no Brasil.")
+            return
+
+        print(
+            f"✓ {len(eventos)} evento(s) ATIVO(S) "
+            "encontrado(s) no Brasil\n"
+        )
+
+        print(f"{'#':<4} {'Evento':<40} {'Categoria':<22} {'Data'}")
+        print("-" * 85)
+
+        for i, evento in enumerate(eventos, start=1):
+
+            titulo = evento.get(
+                "title",
+                "Sem título"
+            )[:38]
+
+            categorias = evento.get("categories", [])
+
+            if categorias:
+                categoria = categorias[0].get(
+                    "title",
+                    "N/A"
+                )
+            else:
+                categoria = "N/A"
+
+            geometria = evento.get("geometry", [])
+
+            if geometria:
+                data = geometria[-1].get(
+                    "date",
+                    "N/A"
+                )[:10]
+            else:
+                data = "N/A"
+
+            print(
+                f"{i:<4} "
+                f"{titulo:<40} "
+                f"{categoria:<22} "
+                f"{data}"
+            )
+
+    except requests.exceptions.SSLError as e:
+        print("\n✗ Erro de certificado SSL.")
+        print(f"Detalhes: {e}")
+
+    except requests.exceptions.ConnectionError as e:
+        print("\n✗ Não foi possível conectar à NASA EONET.")
+        print(f"Detalhes: {e}")
+
+    except requests.exceptions.Timeout:
+        print("\n✗ A NASA demorou demais para responder.")
+
+    except requests.exceptions.HTTPError as e:
+        print("\n✗ A NASA retornou um erro HTTP.")
+        print(f"Detalhes: {e}")
+
+    except requests.exceptions.RequestException as e:
+        print("\n✗ Erro na requisição.")
+        print(f"Detalhes: {e}")
+
+    except Exception as e:
+        print("\n✗ Erro inesperado.")
+        print(f"Detalhes: {e}")
+
 def aguardar_retorno():
     """Pausa e pergunta se o usuário quer voltar ao menu ou sair."""
     print("\n" + "-"*55)
@@ -168,10 +265,24 @@ def tela_eventos_eonet():
         else:
             print(f"\n✗ Erro EONET: status {response.status_code}")
 
-    except requests.exceptions.ConnectionError:
-        print("\n✗ Sem conexão com a internet.")
+    except requests.exceptions.ConnectionError as e:
+        print("\n✗ Erro de conexão com a NASA EONET.")
+        print(f"Detalhes: {e}")
+
+    except requests.exceptions.Timeout as e:
+        print("\n✗ Tempo de resposta esgotado.")
+        print(f"Detalhes: {e}")
+
+    except requests.exceptions.RequestException as e:
+        print("\n✗ Erro na requisição HTTP.")
+        print(f"Detalhes: {e}")
+
+    except Exception as e:
+        print(f"\n✗ Erro inesperado: {e}")
+
     except requests.exceptions.Timeout:
         print("\n✗ Tempo de resposta esgotado.")
+
     except Exception as e:
         print(f"\n✗ Erro inesperado: {e}")
 
@@ -204,6 +315,7 @@ def exibir_menu():
     print("        ORBITWATCH - Monitoramento Orbital")
     print("="*55)
     print("  1. Eventos naturais ativos agora (EONET)")
+    print("  2. Eventos naturais ativos agora no Brasil")
     print("  2. Satélites e sensores")
     print("  3. Eventos ambientais monitorados")
     print("  4. APIs NASA utilizadas")
@@ -211,6 +323,8 @@ def exibir_menu():
     print("  0. Sair")
     print("="*55)
 
+def buscar_eventos_eonet(bbox=None):
+    bbox="-74,5.3,-34.7,-33.8"
 
 def main():
     """Função principal do OrbitWatch."""
@@ -230,20 +344,30 @@ def main():
             case 1:
                 tela_eventos_eonet()
                 rodando = aguardar_retorno()
+
             case 2:
+                tela_eventos_brasil()
+                rodando = aguardar_retorno()
+
+            case 3:
                 tela_satelites()
                 rodando = aguardar_retorno()
-            case 3:
+
+            case 4:
                 tela_eventos_ambientais()
                 rodando = aguardar_retorno()
-            case 4:
+
+            case 5:
                 tela_apis()
                 rodando = aguardar_retorno()
-            case 5:
+
+            case 6:
                 tela_impactos()
                 rodando = aguardar_retorno()
+
             case 0:
                 rodando = False
+
             case _:
                 print("\n  ✗ Opção inválida. Tente novamente.")
 
