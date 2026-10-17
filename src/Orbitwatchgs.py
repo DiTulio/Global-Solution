@@ -1,8 +1,12 @@
+"""OrbitWatch - Monitoramento ambiental via dados orbitais da NASA (EONET)."""
 import requests
-import truststore
-truststore.inject_into_ssl()
 
-API_KEY = "z9qtFmVtl57soBw9Bsx1sKyfzAgKKlqfxtGvmFqS"
+# truststore e opcional: ajuda em redes com certificados corporativos/escolares.
+try:
+    import truststore
+    truststore.inject_into_ssl()
+except ImportError:
+    pass
 
 satelites_sensores = [
     "TERRA - satélite NASA lançado em 1999",
@@ -96,204 +100,138 @@ impactos_solucao = [
     "Contribuição para metas do Acordo de Paris"
 ]
 
-def tela_eventos_brasil():
-    """Busca eventos naturais ativos dentro do território brasileiro."""
+EONET_URL = "https://eonet.gsfc.nasa.gov/api/v3/events"
+BBOX_BRASIL = "-74,5.3,-34.7,-33.8"  # oeste, norte, leste, sul (aproximado)
 
+# Radicais (sem plural/acento) para a classificacao funcionar em PT e EN.
+CATEGORIAS = {
+    "fogo": ["queimada", "incêndio", "fumaça", "wildfire", "fire", "smoke"],
+    "tempestade": ["furac", "ciclone", "tempestade", "storm", "hurricane", "typhoon", "cyclone"],
+    "inundacao": ["inunda", "enchente", "flood"],
+    "vulcao": ["vulc", "erup", "volcano", "eruption"],
+    "vegetacao": ["desmat", "erosão", "alga", "deslizamento", "landslide", "water color"],
+    "gelo": ["gelo", "neve", "geleira", "iceberg", "snow", "sea and lake ice"],
+    "seca": ["seca", "drought"],
+    "sismo": ["terremot", "sism", "earthquake", "seismic"],
+}
+
+
+def classificar_evento(texto):
+    """Classifica um evento (titulo ou categoria) usando match/case."""
+    t = texto.lower()
+    chave = next(
+        (c for c, palavras in CATEGORIAS.items() if any(p in t for p in palavras)),
+        "outros",
+    )
+    match chave:
+        case "fogo":
+            return "Fogo / Queimada"
+        case "tempestade":
+            return "Tempestade"
+        case "inundacao":
+            return "Inundação"
+        case "vulcao":
+            return "Vulcânico"
+        case "vegetacao":
+            return "Vegetação / Solo"
+        case "gelo":
+            return "Criosfera"
+        case "seca":
+            return "Seca"
+        case "sismo":
+            return "Sísmico"
+        case _:
+            return "Atmosférico / Outros"
+
+
+def buscar_eventos_eonet(bbox=None):
+    """Busca eventos abertos na NASA EONET. Retorna a lista ou None em caso de erro."""
+    params = {"status": "open", "limit": 100}
+    if bbox:
+        params["bbox"] = bbox
     try:
-        url = "https://eonet.gsfc.nasa.gov/api/v3/events"
-
-        params = {
-            "status": "open",
-            "limit": 100,
-            "bbox": "-74,5.3,-34.7,-33.8"
-        }
-
-        print("\nConsultando eventos naturais ativos no Brasil...")
-        print("Fonte: NASA EONET\n")
-
-        response = requests.get(
-            url,
-            params=params,
-            timeout=15
-        )
-
-        response.raise_for_status()
-
-        dados = response.json()
-        eventos = dados.get("events", [])
-
-        if not eventos:
-            print("\n⚠ Nenhum evento natural ativo encontrado no Brasil.")
-            return
-
-        print(
-            f"✓ {len(eventos)} evento(s) ATIVO(S) "
-            "encontrado(s) no Brasil\n"
-        )
-
-        print(f"{'#':<4} {'Evento':<40} {'Categoria':<22} {'Data'}")
-        print("-" * 85)
-
-        for i, evento in enumerate(eventos, start=1):
-
-            titulo = evento.get(
-                "title",
-                "Sem título"
-            )[:38]
-
-            categorias = evento.get("categories", [])
-
-            if categorias:
-                categoria = categorias[0].get(
-                    "title",
-                    "N/A"
-                )
-            else:
-                categoria = "N/A"
-
-            geometria = evento.get("geometry", [])
-
-            if geometria:
-                data = geometria[-1].get(
-                    "date",
-                    "N/A"
-                )[:10]
-            else:
-                data = "N/A"
-
-            print(
-                f"{i:<4} "
-                f"{titulo:<40} "
-                f"{categoria:<22} "
-                f"{data}"
-            )
-
-    except requests.exceptions.SSLError as e:
-        print("\n✗ Erro de certificado SSL.")
-        print(f"Detalhes: {e}")
-
-    except requests.exceptions.ConnectionError as e:
-        print("\n✗ Não foi possível conectar à NASA EONET.")
-        print(f"Detalhes: {e}")
-
+        response = requests.get(EONET_URL, params=params, timeout=15)
+        if response.status_code == 200:
+            return response.json().get("events", [])
+        elif response.status_code == 503:
+            print("\n⚠ EONET temporariamente indisponível (503). Tente novamente em instantes.")
+        else:
+            print(f"\n✗ Erro EONET: status {response.status_code}")
     except requests.exceptions.Timeout:
         print("\n✗ A NASA demorou demais para responder.")
-
-    except requests.exceptions.HTTPError as e:
-        print("\n✗ A NASA retornou um erro HTTP.")
-        print(f"Detalhes: {e}")
-
+    except requests.exceptions.SSLError as e:
+        print(f"\n✗ Erro de certificado SSL.\nDetalhes: {e}")
+    except requests.exceptions.ConnectionError as e:
+        print(f"\n✗ Não foi possível conectar à NASA EONET.\nDetalhes: {e}")
     except requests.exceptions.RequestException as e:
-        print("\n✗ Erro na requisição.")
-        print(f"Detalhes: {e}")
-
+        print(f"\n✗ Erro na requisição HTTP.\nDetalhes: {e}")
     except Exception as e:
-        print("\n✗ Erro inesperado.")
-        print(f"Detalhes: {e}")
+        print(f"\n✗ Erro inesperado: {e}")
+    return None
+
+
+def exibir_eventos(eventos, escopo):
+    """Imprime a tabela de eventos, incluindo a classificação OrbitWatch."""
+    if eventos is None:
+        return
+    if not eventos:
+        print(f"\n⚠ Nenhum evento natural ativo encontrado ({escopo}).")
+        return
+    print(f"\n✓ {len(eventos)} evento(s) ATIVO(S) — {escopo} — Fonte: NASA EONET\n")
+    print(f"{'#':<4} {'Evento':<38} {'Categoria NASA':<20} {'Classe OrbitWatch':<22} Data")
+    print("-" * 100)
+    for i, evento in enumerate(eventos, start=1):
+        titulo = evento.get("title", "Sem título")[:36]
+        cats = evento.get("categories", [])
+        categoria = cats[0].get("title", "N/A") if cats else "N/A"
+        geo = evento.get("geometry", [])
+        data = geo[-1].get("date", "N/A")[:10] if geo else "N/A"
+        classe = classificar_evento(f"{evento.get('title', '')} {categoria}")
+        print(f"{i:<4} {titulo:<38} {categoria[:18]:<20} {classe:<22} {data}")
+
+
+def tela_eventos_eonet():
+    """Eventos naturais ativos no mundo."""
+    print("\nConsultando eventos naturais ativos no mundo...")
+    exibir_eventos(buscar_eventos_eonet(), "mundo")
+
+
+def tela_eventos_brasil():
+    """Eventos naturais ativos na região do Brasil (bounding box aproximada)."""
+    print("\nConsultando eventos naturais ativos na região do Brasil...")
+    exibir_eventos(buscar_eventos_eonet(BBOX_BRASIL), "região do Brasil")
+
 
 def aguardar_retorno():
     """Pausa e pergunta se o usuário quer voltar ao menu ou sair."""
-    print("\n" + "-"*55)
+    print("\n" + "-" * 55)
     print("  V. Voltar ao menu principal")
     print("  0. Sair")
-    print("-"*55)
+    print("-" * 55)
     while True:
         acao = input("  Escolha: ").strip().upper()
         if acao == "V":
-            return True   # voltar ao menu
+            return True
         elif acao == "0":
-            return False  # sair
+            return False
         else:
             print("  ✗ Digite V para voltar ou 0 para sair.")
 
 
 def exibir_lista(nome_lista, itens):
     """Exibe os itens de uma lista numerada."""
-    print(f"\n{'='*55}")
+    print(f"\n{'=' * 55}")
     print(f"  {nome_lista} ({len(itens)} itens)")
-    print(f"{'='*55}")
+    print(f"{'=' * 55}")
     for i, item in enumerate(itens, start=1):
         print(f"  {i:02d}. {item}")
 
 
-def classificar_evento(evento):
-    """Classifica um evento ambiental por categoria usando match/case."""
-    t = evento.lower()
-    match True:
-        case _ if any(p in t for p in ["queimada", "incêndio", "fumaça", "wildfire", "fire"]):
-            return "Fogo / Queimada"
-        case _ if any(p in t for p in ["furacão", "ciclone", "tempestade", "storm", "hurricane", "typhoon"]):
-            return "Tempestade"
-        case _ if any(p in t for p in ["inundação", "enchente", "flood"]):
-            return "Inundação"
-        case _ if any(p in t for p in ["vulcão", "erupção", "volcano", "eruption"]):
-            return "Vulcânico"
-        case _ if any(p in t for p in ["desmatamento", "erosão", "alga"]):
-            return "Vegetação / Solo"
-        case _ if any(p in t for p in ["gelo", "neve", "geleira", "ice", "iceberg", "snow"]):
-            return "Criosfera"
-        case _ if any(p in t for p in ["seca", "drought"]):
-            return "Seca"
-        case _ if any(p in t for p in ["earthquake", "seismic"]):
-            return "Sísmico"
-        case _:
-            return "Atmosférico / Outros"
-
-def tela_eventos_eonet():
-    """Busca e exibe eventos naturais ativos via NASA EONET."""
-    try:
-        url = "https://eonet.gsfc.nasa.gov/api/v3/events?status=open&limit=100"
-        response = requests.get(url, timeout=10)
-
-        if response.status_code == 200:
-            eventos = response.json().get("events", [])
-            if not eventos:
-                print("\n⚠ Nenhum evento ativo no momento.")
-            else:
-                print(f"\n✓ {len(eventos)} evento(s) ATIVO(S) agora — Fonte: NASA EONET\n")
-                print(f"{'#':<4} {'Evento':<40} {'Categoria':<22} {'Data'}")
-                print("-" * 85)
-                for i, evento in enumerate(eventos, start=1):
-                    titulo    = evento.get("title", "Sem título")[:38]
-                    categoria = evento["categories"][0]["title"] if evento.get("categories") else "N/A"
-                    geo       = evento.get("geometry", [])
-                    data      = geo[-1]["date"][:10] if geo else "N/A"
-                    print(f"{i:<4} {titulo:<40} {categoria:<22} {data}")
-
-        elif response.status_code == 503:
-            print("\n⚠ EONET temporariamente indisponível (503). Tente novamente em instantes.")
-        else:
-            print(f"\n✗ Erro EONET: status {response.status_code}")
-
-    except requests.exceptions.ConnectionError as e:
-        print("\n✗ Erro de conexão com a NASA EONET.")
-        print(f"Detalhes: {e}")
-
-    except requests.exceptions.Timeout as e:
-        print("\n✗ Tempo de resposta esgotado.")
-        print(f"Detalhes: {e}")
-
-    except requests.exceptions.RequestException as e:
-        print("\n✗ Erro na requisição HTTP.")
-        print(f"Detalhes: {e}")
-
-    except Exception as e:
-        print(f"\n✗ Erro inesperado: {e}")
-
-    except requests.exceptions.Timeout:
-        print("\n✗ Tempo de resposta esgotado.")
-
-    except Exception as e:
-        print(f"\n✗ Erro inesperado: {e}")
-
-
 def tela_satelites():
-    """Exibe a lista de satélites e sensores com classificação."""
     exibir_lista("Satélites e Sensores NASA", satelites_sensores)
 
 
 def tela_eventos_ambientais():
-    """Exibe a lista de eventos ambientais com classificação automática."""
     exibir_lista("Eventos Ambientais Monitorados", eventos_ambientais)
     print("\n  --- Classificação automática ---")
     for evento in eventos_ambientais:
@@ -301,30 +239,27 @@ def tela_eventos_ambientais():
 
 
 def tela_apis():
-    """Exibe a lista de APIs NASA utilizadas."""
     exibir_lista("APIs NASA Utilizadas", apis_nasa)
 
 
 def tela_impactos():
-    """Exibe a lista de impactos esperados da solução."""
     exibir_lista("Impactos da Solução OrbitWatch", impactos_solucao)
 
-def exibir_menu():
-    """Exibe o menu principal."""
-    print("\n" + "="*55)
-    print("        ORBITWATCH - Monitoramento Orbital")
-    print("="*55)
-    print("  1. Eventos naturais ativos agora (EONET)")
-    print("  2. Eventos naturais ativos agora no Brasil")
-    print("  2. Satélites e sensores")
-    print("  3. Eventos ambientais monitorados")
-    print("  4. APIs NASA utilizadas")
-    print("  5. Impactos da solução")
-    print("  0. Sair")
-    print("="*55)
 
-def buscar_eventos_eonet(bbox=None):
-    bbox="-74,5.3,-34.7,-33.8"
+def exibir_menu():
+    """Exibe o menu principal (numeração igual à do match/case em main)."""
+    print("\n" + "=" * 55)
+    print("        ORBITWATCH - Monitoramento Orbital")
+    print("=" * 55)
+    print("  1. Eventos naturais ativos agora (mundo)")
+    print("  2. Eventos naturais ativos agora (Brasil)")
+    print("  3. Satélites e sensores")
+    print("  4. Eventos ambientais monitorados")
+    print("  5. APIs NASA utilizadas")
+    print("  6. Impactos da solução")
+    print("  0. Sair")
+    print("=" * 55)
+
 
 def main():
     """Função principal do OrbitWatch."""
@@ -333,7 +268,6 @@ def main():
     rodando = True
     while rodando:
         exibir_menu()
-
         try:
             opcao = int(input("\n  Escolha uma opção: "))
         except ValueError:
@@ -344,30 +278,23 @@ def main():
             case 1:
                 tela_eventos_eonet()
                 rodando = aguardar_retorno()
-
             case 2:
                 tela_eventos_brasil()
                 rodando = aguardar_retorno()
-
             case 3:
                 tela_satelites()
                 rodando = aguardar_retorno()
-
             case 4:
                 tela_eventos_ambientais()
                 rodando = aguardar_retorno()
-
             case 5:
                 tela_apis()
                 rodando = aguardar_retorno()
-
             case 6:
                 tela_impactos()
                 rodando = aguardar_retorno()
-
             case 0:
                 rodando = False
-
             case _:
                 print("\n  ✗ Opção inválida. Tente novamente.")
 
@@ -376,4 +303,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
