@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OrbitWatch</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<style>
+:root{--bg:#fff;--ink:#0b0c10;--mute:#5d6470;--line:#d9dce2;--night:#0a1024;--pink:#ED145B;--nasa:#FC3D21;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d0f14;--ink:#f2f3f5;--mute:#9aa1ad;--line:#2a2f3a}}
+:root[data-theme="dark"]{--bg:#0d0f14;--ink:#f2f3f5;--mute:#9aa1ad;--line:#2a2f3a}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif}
+.mono{font-family:'Space Mono',ui-monospace,monospace;letter-spacing:.22em;font-size:.72rem;text-transform:uppercase}
+.wide{letter-spacing:.2em;text-transform:uppercase;font-weight:300}
+.stars{background-color:var(--night);background-image:radial-gradient(1px 1px at 12% 30%,#fff9 50%,transparent),radial-gradient(1px 1px at 70% 18%,#fff8 50%,transparent),radial-gradient(1.5px 1.5px at 85% 65%,#fffc 50%,transparent),radial-gradient(1px 1px at 35% 80%,#fff7 50%,transparent),radial-gradient(1px 1px at 55% 55%,#fff6 50%,transparent),radial-gradient(ellipse at 20% 100%,#1c2a5a 0,transparent 60%)}
+.nebula{background:radial-gradient(circle at 70% 40%,#5b2a86 0,#2a1245 45%,#0c0618 100%)}
+.rings{background:radial-gradient(circle at 80% 20%,#16324f 0,#0a1024 70%)}
+.teal{background:radial-gradient(circle at 20% 30%,#0e5a52 0,#07161b 75%)}
+.card{position:relative;overflow:hidden;color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:1.5rem;min-height:260px;text-align:left}
+.card:after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 35%,#000a);pointer-events:none}
+.card>*{position:relative;z-index:1}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--pink);outline-offset:3px}
+@media (prefers-reduced-motion:no-preference){.orb{transform-origin:300px 150px;animation:spin 18s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.pulse{animation:p 2.4s ease-out infinite}@keyframes p{0%{r:5;opacity:.8}100%{r:15;opacity:0}}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useMemo} = React;
+const satelites_sensores = ["TERRA - satélite NASA lançado em 1999", "AQUA - satélite NASA lançado em 2002", "SUOMI NPP - monitoramento climático", "NOAA-20 - dados atmosféricos", "Landsat 8 - imagens de superfície terrestre", "Landsat 9 - resolução melhorada", "GOES-16 - monitoramento meteorológico", "GOES-18 - cobertura do Pacífico", "Sentinel-2 - vegetação e solo", "Sentinel-5P - qualidade do ar", "MODIS - detecção de queimadas (FIRMS)", "VIIRS - imagens noturnas e térmicas", "ICESat-2 - altimetria polar", "GRACE-FO - gravidade e água subterrânea", "OCO-2 - concentração de CO₂", "CALIPSO - aerossóis e nuvens", "CloudSat - estrutura de nuvens", "SMAP - umidade do solo", "GPM - precipitação global", "TRMM - chuvas tropicais"];
+const eventos_ambientais = ["Queimadas e incêndios florestais", "Desmatamento em tempo real", "Furacões e ciclones tropicais", "Terremotos e atividade sísmica", "Erupções vulcânicas", "Inundações e enchentes", "Secas prolongadas", "Derretimento de geleiras", "Elevação do nível do mar", "Tempestades de areia e poeira", "Deslizamentos de terra", "Florações de algas (bloom)", "Erosão costeira", "Anomalias de temperatura superficial", "Buracos de ozônio", "Poluição atmosférica urbana", "Vazamentos de óleo no oceano", "Ondas de calor extremas", "Neve e cobertura de gelo", "Fumaça e aerossóis atmosféricos"];
+const apis_nasa = ["APOD - Astronomy Picture of the Day", "FIRMS - Fire Information for Resource Management", "EONET - Earth Observatory Natural Event Tracker", "NASA Earthdata - repositório de dados ambientais", "GIBS - Global Imagery Browse Services", "CMR - Common Metadata Repository", "NASA POWER - dados meteorológicos e solares", "Exoplanet Archive API", "NASA Image and Video Library", "Open APIs - dados abertos da NASA", "DONKI - notificações de clima espacial", "MarsWeather - clima em Marte", "NeoWs - objetos próximos da Terra", "Insight Mars Lander API", "NASA Techport - projetos tecnológicos", "GeneLab - biologia no espaço", "HelioViewer API - imagens solares", "LAADS DAAC - dados atmosféricos", "LP DAAC - dados de superfície terrestre", "PO.DAAC - dados de oceanografia"];
+const impactos_solucao = ["Detecção precoce de queimadas no Brasil", "Redução do tempo de resposta a desastres naturais", "Apoio à fiscalização ambiental com dados reais", "Democratização do acesso a dados satelitais", "Suporte a pesquisadores e universidades", "Monitoramento do desmatamento na Amazônia", "Alertas automáticos para defesa civil", "Visualização acessível de dados complexos", "Integração com sistemas de gestão municipal", "Apoio a políticas públicas ambientais", "Redução de custos de monitoramento tradicional", "Cobertura nacional sem infraestrutura física", "Histórico de eventos para análise científica", "Transparência de dados ambientais ao cidadão", "Complemento a sensores locais (edge computing)", "Alerta de fumaça e qualidade do ar", "Monitoramento de bacias hidrográficas", "Suporte à agricultura de precisão", "Identificação de áreas de risco", "Contribuição para metas do Acordo de Paris"];
+
+const API = location.protocol==="file:" ? "http://127.0.0.1:5000" : "";
+const CLASSES = [
+["Fogo / Queimada","#FC3D21",["queimada","incêndio","fumaça","wildfire","fire","smoke"]],
+["Tempestade","#6C8CFF",["furac","ciclone","tempestade","storm","hurricane","typhoon","cyclone"]],
+["Inundação","#2EA0F0",["inunda","enchente","flood"]],
+["Vulcânico","#E64980",["vulc","erup","volcano","eruption"]],
+["Vegetação / Solo","#51CF66",["desmat","erosão","alga","deslizamento","landslide","water color"]],
+["Criosfera","#3BC9DB",["gelo","neve","geleira","iceberg","snow","sea and lake ice"]],
+["Seca","#E8B923",["seca","drought"]],
+["Sísmico","#9775FA",["terremot","sism","earthquake","seismic"]],
+["Atmosférico / Outros","#9aa1ad",[]]
+];
+const COR = Object.fromEntries(CLASSES.map(c=>[c[0],c[1]]));
+const classificar = (t)=>{t=t.toLowerCase();return (CLASSES.find(c=>c[2].some(p=>t.includes(p)))||CLASSES[8])[0];};
+const SNAP = [
+["Wildfire - Mato Grosso, Brazil","Wildfires",-55.5,-13],["Wildfire - Pará, Brazil","Wildfires",-52.3,-6.1],["Drought - Pantanal, Brazil","Drought",-57,-18.5],
+["Flood - Rio Grande do Sul, Brazil","Floods",-52,-29.7],["Wildfire - California, USA","Wildfires",-120.5,38],["Typhoon - Western Pacific","Severe Storms",135,18],
+["Tropical Storm - North Atlantic","Severe Storms",-45,18],["Volcano - Etna, Italy","Volcanoes",15,37.7],["Iceberg A23a - Weddell Sea","Sea and Lake Ice",-45,-61],["Dust Storm - Sahara","Dust and Haze",-5,20]
+].map((e,i)=>({id:"s"+i,title:e[0],cat:e[1],lon:e[2],lat:e[3],date:"exemplo",classe:classificar(e[0]+" "+e[1])}));
+const inBR = e=>e.lon>=-74&&e.lon<=-34.7&&e.lat>=-33.8&&e.lat<=5.3;
+
+function useEventos(escopo,tick){
+const [s,setS] = useState({eventos:SNAP.filter(e=>escopo==="mundo"||inBR(e)),status:"loading"});
+useEffect(()=>{
+    let vivo=true; setS(p=>({...p,status:"loading"}));
+    fetch(API+"/api/eventos?escopo="+escopo).then(r=>{if(!r.ok)throw 0;return r.json();})
+    .then(d=>vivo&&setS({eventos:d.eventos,status:"ok"}))
+    .catch(()=>vivo&&setS({eventos:SNAP.filter(e=>escopo==="mundo"||inBR(e)),status:"off"}));
+    return ()=>{vivo=false};
+},[escopo,tick]);
+return s;
+}
+function useListas(){
+const [l,setL] = useState({satelites:satelites_sensores,eventos:eventos_ambientais,apis:apis_nasa,impactos:impactos_solucao});
+useEffect(()=>{fetch(API+"/api/listas").then(r=>r.json()).then(setL).catch(()=>{});},[]);
+return l;
+}
+
+const Seta = ()=><span className="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm text-white" style={{background:"var(--nasa)"}} aria-hidden="true">→</span>;
+const Rotulo = ({children})=><span className="mono inline-flex items-center gap-2"><span className="h-4 w-4 rounded-full border border-white/60"></span>{children}</span>;
+
+function Hero(){
+const links=[["#destaques","Início"],["#ao-vivo","Eventos ao vivo"],["#dados","Dados do projeto"],["#equipe","Equipe"]];
+return <header className="stars text-white">
+    <div className="mono flex items-center justify-between px-5 py-3 text-[0.65rem] sm:px-10" style={{background:"#14171c",color:"#c7ccd4"}}>
+    <span>Global Solution 2026 · FIAP</span><a href="#ao-vivo">Eventos ao vivo</a>
+    </div>
+    <nav className="flex flex-wrap items-center justify-between gap-4 px-5 py-6 sm:px-10" aria-label="Principal">
+    <a href="#" className="text-3xl tracking-wide"><span className="font-extralight">ORBIT</span><span className="font-extrabold">WATCH</span></a>
+    <div className="flex flex-wrap items-center gap-x-7 gap-y-2 text-sm wide">
+        {links.map(([h,n])=><a key={h} href={h} className="opacity-80 hover:opacity-100">{n}</a>)}
+        <a href="#ao-vivo" className="px-6 py-3 text-sm font-semibold text-white" style={{background:"var(--pink)"}}>Ver ao vivo</a>
+    </div>
+    </nav>
+    <div className="mx-auto max-w-5xl px-5 pb-20 pt-10 text-center sm:pt-16">
+    <svg viewBox="0 0 600 300" className="mx-auto mb-2 w-full max-w-md" aria-hidden="true">
+        <circle cx="300" cy="150" r="46" fill="#1b4f8f"/><circle cx="300" cy="150" r="46" fill="none" stroke="#6fb4ff" strokeWidth="2" opacity=".6"/>
+        <path d="M268 135q18-18 40-8t10 30q-26 14-50-22z" fill="#2f9e66" opacity=".85"/>
+        <ellipse cx="300" cy="150" rx="140" ry="52" fill="none" stroke="#fff4" strokeDasharray="3 5"/>
+        <ellipse cx="300" cy="150" rx="230" ry="90" fill="none" stroke="#fff3" strokeDasharray="3 5"/>
+        <g className="orb"><circle cx="530" cy="150" r="5" fill="var(--pink)"/></g>
+    </svg>
+    <h1 className="text-6xl tracking-tight sm:text-8xl"><span className="font-extralight">ORBIT</span><span className="font-extrabold">WATCH</span></h1>
+    <p className="mono mt-6" style={{letterSpacing:".35em"}}>Monitoramento ambiental via dados orbitais da NASA</p>
+    <a href="#ao-vivo" className="mt-10 inline-block px-8 py-4 text-sm font-semibold uppercase tracking-widest text-white" style={{background:"var(--pink)"}}>Acessar eventos ao vivo</a>
+    </div>
+</header>;
+}
+
+function Destaques({eventos,onIr}){
+const fogo = eventos.filter(e=>e.classe==="Fogo / Queimada").length;
+return <section id="destaques" className="mx-auto max-w-6xl px-5 py-16 sm:px-10">
+    <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
+    <h2 className="text-5xl font-semibold tracking-tight sm:text-6xl">Em destaque</h2>
+    <a href="#ao-vivo" onClick={()=>onIr("mundo")} className="flex items-center gap-3 text-xl font-semibold">Eventos ao vivo <Seta/></a>
+    </div>
+    <div className="grid gap-4 lg:grid-cols-3">
+    <a href="#ao-vivo" onClick={()=>onIr("mundo")} className="card nebula lg:row-span-2" style={{minHeight:420}}>
+        <Rotulo>Tempo real</Rotulo>
+        <div><p className="mono mb-2">{eventos.length} eventos ativos</p><p className="text-3xl font-semibold leading-tight sm:text-4xl">O que a Terra está registrando agora, visto pelos satélites</p></div></a>
+    <a href="#ao-vivo" onClick={()=>onIr("brasil")} className="card rings">
+        <Rotulo>Brasil</Rotulo><p className="text-2xl font-semibold leading-tight">Eventos ativos na região do Brasil</p></a>
+    <a href="#dados" className="card teal">
+        <Rotulo>{fogo>0?fogo+" focos de fogo":"Impacto"}</Rotulo><p className="text-2xl font-semibold leading-tight">Queimadas, desmatamento e resposta rápida a desastres</p></a>
+    </div>
+</section>;
+}
+
+function Mapa({eventos,sel,onSel}){
+const X=l=>(l+180)*2, Y=l=>(90-l)*2;
+return <svg viewBox="0 0 720 360" className="w-full" style={{background:"var(--night)"}} role="img" aria-label="Mapa-múndi com eventos ativos">
+    {[-150,-120,-90,-60,-30,0,30,60,90,120,150].map(l=><line key={"x"+l} x1={X(l)} x2={X(l)} y1="0" y2="360" stroke="#fff" opacity={l===0?.25:.1}/>)}
+    {[-60,-30,0,30,60].map(l=><line key={"y"+l} y1={Y(l)} y2={Y(l)} x1="0" x2="720" stroke="#fff" opacity={l===0?.25:.1}/>)}
+    <rect x={X(-74)} y={Y(5.3)} width={X(-34.7)-X(-74)} height={Y(-33.8)-Y(5.3)} fill="none" stroke="#ED145B" strokeWidth="1.5" strokeDasharray="4 3"/>
+    <text x={X(-74)} y={Y(5.3)-5} fontSize="10" fill="#ED145B">BRASIL</text>
+    {eventos.map(e=>{const on=sel===e.id,c=COR[e.classe]||"#9aa1ad";return <g key={e.id} onClick={()=>onSel(on?null:e.id)} style={{cursor:"pointer"}}>
+    {on&&<circle cx={X(e.lon)} cy={Y(e.lat)} r="5" fill={c} className="pulse"/>}
+    <circle cx={X(e.lon)} cy={Y(e.lat)} r={on?7:4.5} fill={c} stroke="#fff" strokeWidth="1"><title>{e.title}</title></circle></g>;})}
+</svg>;
+}
+
+function AoVivo({escopo,setEscopo,eventos,status,atualizar}){
+const [filtro,setFiltro]=useState(null),[sel,setSel]=useState(null);
+useEffect(()=>{setFiltro(null);setSel(null);},[escopo]);
+const lista=useMemo(()=>eventos.filter(e=>!filtro||e.classe===filtro),[eventos,filtro]);
+const classes=[...new Set(eventos.map(e=>e.classe))];
+const msg={loading:"Consultando o servidor Python…",ok:"Conectado ao Python · dados ao vivo da NASA EONET",off:"Python desconectado · mostrando dados de exemplo. Rode: python server.py"}[status];
+return <section id="ao-vivo" className="stars text-white">
+    <div className="mx-auto max-w-6xl px-5 py-16 sm:px-10">
+    <h2 className="text-5xl font-semibold tracking-tight sm:text-6xl">Eventos ao vivo</h2>
+    <p className="mono mt-4 flex items-center gap-3"><span className="h-2.5 w-2.5 rounded-full" style={{background:status==="ok"?"#51CF66":status==="off"?"#FC3D21":"#E8B923"}}></span>{msg}</p>
+    <div className="mt-8 flex flex-wrap gap-3">
+        {[["mundo","Mundo"],["brasil","Brasil"]].map(([k,n])=><button key={k} aria-pressed={escopo===k} onClick={()=>setEscopo(k)} className="px-6 py-2.5 text-sm font-semibold uppercase tracking-widest" style={escopo===k?{background:"var(--pink)"}:{border:"1px solid #fff5"}}>{n}</button>)}
+        <button onClick={atualizar} className="px-6 py-2.5 text-sm uppercase tracking-widest" style={{border:"1px solid #fff5"}}>Atualizar</button>
+    </div>
+    <div className="mt-6 grid gap-4 lg:grid-cols-5">
+        <div className="lg:col-span-3"><Mapa eventos={lista} sel={sel} onSel={setSel}/>
+        <div className="mt-4 flex flex-wrap gap-2">{classes.map(k=><button key={k} aria-pressed={filtro===k} onClick={()=>setFiltro(filtro===k?null:k)} className="mono flex items-center gap-2 px-3 py-1.5" style={{border:"1px solid "+(filtro===k?COR[k]:"#fff4"),opacity:filtro&&filtro!==k?.45:1}}><span className="h-2 w-2 rounded-full" style={{background:COR[k]}}></span>{k}</button>)}</div></div>
+        <div className="lg:col-span-2" style={{maxHeight:480,overflowY:"auto",border:"1px solid #fff3"}}>
+        <p className="mono sticky top-0 px-4 py-3" style={{background:"#101733"}}>{lista.length} evento{lista.length!==1?"s":""} ativo{lista.length!==1?"s":""}</p>
+        <ul>{lista.length===0&&<li className="p-4 text-sm opacity-80">Nenhum evento encontrado. Troque o escopo ou remova o filtro.</li>}
+            {lista.map(e=><li key={e.id}><button onClick={()=>setSel(sel===e.id?null:e.id)} className="w-full px-4 py-3 text-left" style={{borderTop:"1px solid #fff2",background:sel===e.id?"#ffffff14":"transparent"}}>
+            <span className="block font-semibold leading-snug">{e.title}</span>
+            <span className="mono mt-1 flex justify-between gap-2" style={{letterSpacing:".1em"}}><span style={{color:COR[e.classe]}}>{e.classe}</span><span className="opacity-70">{e.date}</span></span></button></li>)}</ul></div>
+    </div>
+    </div></section>;
+}
+
+function Dados({listas}){
+const abas=[["satelites","Satélites e sensores"],["eventos","Eventos monitorados"],["apis","APIs da NASA"],["impactos","Impactos"]];
+const [aba,setAba]=useState("satelites"),[q,setQ]=useState("");
+const itens=listas[aba].filter(i=>i.toLowerCase().includes(q.toLowerCase()));
+return <section id="dados" className="mx-auto max-w-6xl px-5 py-16 sm:px-10">
+    <h2 className="mb-8 text-5xl font-semibold tracking-tight sm:text-6xl">Dados do projeto</h2>
+    <div className="mb-6 flex flex-wrap gap-2">{abas.map(([k,n])=><button key={k} aria-pressed={aba===k} onClick={()=>setAba(k)} className="mono px-4 py-2" style={aba===k?{background:"var(--ink)",color:"var(--bg)"}:{border:"1px solid var(--line)"}}>{n}</button>)}</div>
+    <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Buscar nesta lista" aria-label="Buscar nesta lista" className="mb-6 w-full max-w-sm border px-4 py-2.5 text-sm" style={{background:"transparent",borderColor:"var(--line)",color:"var(--ink)"}}/>
+    <ul className="grid gap-px sm:grid-cols-2" style={{background:"var(--line)",border:"1px solid var(--line)"}}>
+    {itens.map(i=>{const [n,...r]=i.split(" - ");return <li key={i} className="flex items-center justify-between gap-3 p-4" style={{background:"var(--bg)"}}>
+        <span><span className="font-semibold">{n}</span>{r.length>0&&<span className="block text-sm" style={{color:"var(--mute)"}}>{r.join(" - ")}</span>}</span>
+        {aba==="eventos"&&<span className="mono shrink-0" style={{letterSpacing:".08em",color:COR[classificar(i)]}}>{classificar(i)}</span>}</li>;})}
+    {itens.length===0&&<li className="p-4 text-sm" style={{background:"var(--bg)",color:"var(--mute)"}}>Nada encontrado. Tente outro termo.</li>}
+    </ul></section>;
+}
+
+function App(){
+const [escopo,setEscopo]=useState("mundo"),[tick,setTick]=useState(0);
+const {eventos,status}=useEventos(escopo,tick), listas=useListas();
+return <div>
+    <Hero/><Destaques eventos={eventos} onIr={setEscopo}/>
+    <AoVivo escopo={escopo} setEscopo={setEscopo} eventos={eventos} status={status} atualizar={()=>setTick(t=>t+1)}/>
+    <Dados listas={listas}/>
+    <footer id="equipe" className="stars px-5 py-14 text-white sm:px-10"><div className="mx-auto max-w-6xl">
+    <p className="text-3xl"><span className="font-extralight">ORBIT</span><span className="font-extrabold">WATCH</span></p>
+    <p className="mono mt-4">Global Solution 2026 · FIAP · Engenharia de Software</p>
+    <p className="mt-4 max-w-3xl text-sm opacity-80">Felipe Romano de Paula Souza, Lucas Zarantonelli Lourenço, Nicole Barbosa Oliveira de Lima, Ryan Romagnoli Santos e Vinicius Di Tulio Gomes Silva.</p>
+    <p className="mt-4 text-sm opacity-60">Dados: NASA EONET e NASA Open APIs.</p></div></footer>
+</div>;
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

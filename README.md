@@ -1,17 +1,17 @@
-# 🛰 OrbitWatch — Monitoramento Ambiental via Dados Orbitais NASA
+# OrbitWatch — Monitoramento Ambiental via Dados Orbitais NASA
 
 > Global Solution 2026 — FIAP | Engenharia de Software — 1º Semestre  
-> Disciplina: Computational Thinking Using Python
+> Disciplina: Computational Thinking with Python
 
 ---
 
-## 📌 Definição do Problema
+## Definição do Problema
 
 Eventos ambientais críticos como queimadas, desmatamento e anomalias climáticas muitas vezes são detectados tarde demais, agravando seus impactos sociais e ambientais. A falta de acesso a dados de monitoramento contínuo e em tempo real dificulta a resposta rápida de autoridades, pesquisadores e cidadãos.
 
 ---
 
-## 💡 Solução Proposta
+## Solução Proposta
 
 O **OrbitWatch** é uma plataforma de monitoramento ambiental que utiliza dados orbitais de satélites da NASA para detectar e acompanhar em tempo real eventos como queimadas, desmatamento e anomalias climáticas.
 
@@ -19,16 +19,16 @@ A solução transforma dados espaciais brutos em informação acessível, conect
 
 ---
 
-## 🚀 Funcionalidades
+## Funcionalidades
 
-- Eventos naturais ativos em tempo real via **NASA EONET**
-- Classificação automática de eventos por categoria (queimada, tempestade, vulcão etc.)
+- Eventos naturais ativos em tempo real via **NASA EONET**, no mundo todo e na região do Brasil
+- Classificação automática (OrbitWatch) dos eventos reais e das listas internas (queimada, tempestade, vulcão etc.)
 - Menu interativo com navegação por opções e retorno ao menu
 - Listagem de satélites, eventos ambientais, APIs NASA e impactos da solução
 
 ---
 
-## 🧱 Estruturas de Programação Utilizadas
+## Estruturas de Programação Utilizadas
 
 | Estrutura | Onde é usada |
 |---|---|
@@ -41,7 +41,7 @@ A solução transforma dados espaciais brutos em informação acessível, conect
 
 ---
 
-## 📖 Explicação do Código
+## Explicação do Código
 
 ### `import requests`
 Importa a biblioteca responsável por fazer requisições à internet. É ela que permite ao programa "ligar" para os servidores da NASA e buscar os dados em tempo real.
@@ -66,7 +66,7 @@ Funciona como um seletor inteligente. No menu, direciona o programa para a funç
 
 ---
 
-## 📋 Listas de Dados
+## Listas de Dados
 
 O projeto contém **4 listas com 20 itens cada**:
 
@@ -77,69 +77,100 @@ O projeto contém **4 listas com 20 itens cada**:
 
 ---
 
-## 🗂 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 orbitwatch/
 │
-├── orbitwatch_gs.py   # Código principal da entrega
-└── README.md          # Este arquivo
+├── src/
+│   ├── Orbitwatchgs.py    # Código principal da entrega (menu de terminal)
+│   ├── server.py          # Servidor Flask que liga o painel ao código Python
+│   └── __init__.py
+├── public/
+│   └── index.html         # Painel visual (React + Tailwind)
+├── requirements.txt       # Dependências (flask, requests)
+├── pyproject.toml         # Entrypoint da Vercel (src.server:app)
+├── README.md              # Este arquivo
+├── LICENSE
+└── Integrantes do Grupo.txt
 ```
 
 ---
 
-## ▶️ Como Executar
+## Como Executar
 
 **Pré-requisitos:**
 - Python 3.10 ou superior
 - Biblioteca `requests` instalada
+- (Opcional) `truststore`, para redes com certificado corporativo ou escolar
 
 **Instalação da dependência:**
 ```bash
 pip install requests
+pip install truststore   # opcional
 ```
 
 **Execução:**
 ```bash
-python orbitwatch_gs.py
+python src/Orbitwatchgs.py
 ```
 
 Ao iniciar, o menu interativo será exibido. Navegue pelas opções e pressione **V** para voltar ao menu ou **0** para sair.
 
 ---
 
-## 🔑 API Key
+## Painel web (eventos ao vivo)
 
-O projeto utiliza a **NASA Open APIs**. A chave já está configurada no código para fins de demonstração acadêmica.
+O painel `public/index.html` busca os eventos por meio do `src/server.py`, que reutiliza as funções do `src/Orbitwatchgs.py` (`buscar_eventos_eonet` e `classificar_evento`).
 
-Para gerar sua própria chave gratuita: [https://api.nasa.gov](https://api.nasa.gov)
+```bash
+pip install -r requirements.txt
+python src/server.py
+```
 
-A API EONET é pública e **não requer chave de acesso**.
+Abra http://127.0.0.1:5000. Se o servidor não estiver rodando, o painel avisa e mostra dados de exemplo.
+
+### Deploy na Vercel
+
+1. Suba a pasta do projeto para um repositório no GitHub (com as pastas `src/` e `public/` e os arquivos `requirements.txt` e `pyproject.toml` na raiz).
+2. Na Vercel, clique em *Add New → Project*, importe o repositório e faça o deploy sem alterar nada (a Vercel detecta o Flask).
+3. Abra a URL gerada e vá até "Eventos ao vivo". Bolinha verde com "Conectado ao Python" indica que a função está consultando a NASA EONET.
+
+Teste local no estilo Vercel: `npm i -g vercel` e `vercel dev`.
 
 ---
 
-## 🌍 Conexão com a Indústria Espacial
+## API Key
+
+O projeto utiliza a **NASA Open APIs**. A versão atual consome apenas a **EONET**, que é pública e **não requer chave de acesso**. Por isso nenhuma chave fica no código.
+
+Se você integrar outras APIs (APOD, NeoWs, DONKI etc.), gere uma chave gratuita em [https://api.nasa.gov](https://api.nasa.gov) e leia-a de uma variável de ambiente (`os.getenv("NASA_API_KEY")`), sem escrevê-la no código.
+
+---
+
+## Conexão com a Indústria Espacial
 
 O OrbitWatch se conecta diretamente à Indústria Espacial ao consumir dados gerados por satélites em órbita. Entre os sistemas utilizados estão:
 
-- **MODIS / VIIRS** — sensores a bordo dos satélites TERRA e AQUA para detecção de queimadas (FIRMS)
-- **EONET** — rastreador de eventos naturais da NASA em tempo real
+- **EONET** — rastreador de eventos naturais da NASA em tempo real (integrado ao código)
+- **MODIS / VIIRS (FIRMS)** — sensores dos satélites TERRA e AQUA para detecção de queimadas (evolução prevista, ainda não integrada)
 
 Sem a infraestrutura orbital, a plataforma não existiria.
 
 ---
 
-## 👥 Integrantes do Grupo
+## Integrantes do Grupo
 
-| Nome |                            | RM     |
-|Felipe Romano de Paula Souza       | 571653 |
-| Lucas Zarantonelli Lourenço       | 569164 |
-| Nicole Barbosa Oliveira de Lima	| 569505 |
-| Ryan Romagnoli Santos             | 568845 |
-| Vinicius Di Tulio Gomes Silva     | 573019 |
+| Nome | RM |
+|---|---|
+| Felipe Romano de Paula Souza | 571653 |
+| Lucas Zarantonelli Lourenço | 569164 |
+| Nicole Barbosa Oliveira de Lima | 569505 |
+| Ryan Romagnoli Santos | 568845 |
+| Vinicius Di Tulio Gomes Silva | 573019 |
 
 ---
 
-## 📄 Licença
+## Licença
 
 Projeto acadêmico desenvolvido para a Global Solution 2026 — FIAP. Dados fornecidos pela [NASA Open APIs](https://api.nasa.gov).
